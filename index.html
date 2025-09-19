@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="google-site-verification" content="Zpk75pai0n043qoYJTK1cpq6zJuKxmftDDkXGzBhk7M" />
+    <title>Crop Onchain</title>
+    <link rel="icon" href="data:,"> <!-- Prevent favicon 404 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #544caf;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #514caf;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #4549a0;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+        .error { color: red; }
+        .success { color: rgb(30, 0, 128); }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Crop Onchain</h1>
+
+        <button id="connectBtn" class="button">Connect MetaMask</button>
+        <div id="connectionStatus" class="output"></div>
+
+        <h2>Register Your Crop</h2>
+        <input type="number" id="cropId" class="input-field" placeholder="Crop ID">
+        <input type="text" id="cropName" class="input-field" placeholder="Crop Name">
+        <input type="text" id="cropManufacturer" class="input-field" placeholder="Farmer / Producer">
+        <input type="text" id="cropBatchNumber" class="input-field" placeholder="Batch Number">
+        <button id="registerCropBtn" class="button">Register Crop</button>
+
+        <h2>Get Crop Details by ID</h2>
+        <input type="number" id="cropIdForDetails" class="input-field" placeholder="Enter Crop ID">
+        <button id="getCropDetailsBtn" class="button">Get Crop Details</button>
+
+        <h2>Transfer Ownership</h2>
+        <input type="number" id="transferId" class="input-field" placeholder="Crop ID">
+        <input type="text" id="newOwner" class="input-field" placeholder="New Owner Address (0x...)">
+        <button id="transferOwnershipBtn" class="button">Transfer Ownership</button>
+
+        <div id="output" class="output"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script>
+        const contractAddress = "0xB6ed24771aFF37Fb1333CaF1fEc71f3f7675cA5F"; 
+        const contractABI = [{
+      "inputs": [],
+      "name": "drugCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "drugs",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "manufacturer",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "batchNumber",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllRegisteredDrugs",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDrugDetails",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_manufacturer",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_batchNumber",
+          "type": "string"
+        }
+      ],
+      "name": "registerDrug",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
+
+        let web3;
+        let contract;
+        let userAccount;
+
+        async function initWeb3() {
+            if (typeof window.ethereum !== "undefined") {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                try {
+                    await window.ethereum.request({ method: "eth_requestAccounts" });
+                    userAccount = (await web3.eth.getAccounts())[0];
+                    document.getElementById("connectionStatus").innerText = "MetaMask Connected: " + userAccount;
+                    document.getElementById("connectionStatus").classList.add("success");
+                } catch (error) {
+                    document.getElementById("connectionStatus").innerText = "MetaMask connection failed: " + error.message;
+                    document.getElementById("connectionStatus").classList.add("error");
+                }
+            } else {
+                document.getElementById("connectionStatus").innerText = "Please install MetaMask.";
+                document.getElementById("connectionStatus").classList.add("error");
+            }
+        }
+
+        async function registerCrop() {
+            const cropId = parseInt(document.getElementById("cropId").value);
+            const cropName = document.getElementById("cropName").value;
+            const cropManufacturer = document.getElementById("cropManufacturer").value;
+            const cropBatchNumber = document.getElementById("cropBatchNumber").value;
+
+            document.getElementById("output").innerText = "Processing... Please wait.";
+
+            try {
+                await contract.methods.registerDrug(cropId, cropName, cropManufacturer, cropBatchNumber)
+                    .send({ from: userAccount });
+                document.getElementById("output").innerText = "Crop registered successfully!";
+                document.getElementById("output").classList.add("success");
+            } catch (error) {
+                document.getElementById("output").innerText = "Error registering crop: " + error.message;
+                document.getElementById("output").classList.add("error");
+            }
+        }
+
+        async function getCropDetailsById() {
+            const cropId = parseInt(document.getElementById("cropIdForDetails").value);
+            try {
+                const crop = await contract.methods.getDrugDetails(cropId).call();
+                document.getElementById("output").innerHTML = `
+                    Name: ${crop[0]}<br>
+                    Producer: ${crop[1]}<br>
+                    Batch Number: ${crop[2]}<br>
+                    Owner: ${crop[3]}
+                `;
+                document.getElementById("output").classList.add("success");
+            } catch (error) {
+                document.getElementById("output").innerText = "Error fetching crop details: " + error.message;
+                document.getElementById("output").classList.add("error");
+            }
+        }
+
+        async function transferOwnership() {
+            const cropId = parseInt(document.getElementById("transferId").value);
+            const newOwner = document.getElementById("newOwner").value;
+            try {
+                await contract.methods.transferOwnership(cropId, newOwner).send({ from: userAccount });
+                document.getElementById("output").innerText = "Ownership transferred successfully!";
+                document.getElementById("output").classList.add("success");
+            } catch (error) {
+                document.getElementById("output").innerText = "Error transferring ownership: " + error.message;
+                document.getElementById("output").classList.add("error");
+            }
+        }
+
+        // Attach events after DOM is ready
+        window.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("connectBtn").addEventListener("click", initWeb3);
+            document.getElementById("registerCropBtn").addEventListener("click", registerCrop);
+            document.getElementById("getCropDetailsBtn").addEventListener("click", getCropDetailsById);
+            document.getElementById("transferOwnershipBtn").addEventListener("click", transferOwnership);
+        });
+    </script>
+
+</body>
+</html>
