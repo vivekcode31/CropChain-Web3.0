@@ -778,10 +778,44 @@
                     <label class="form-label">New Owner Address</label>
                     <input type="text" id="newOwner" class="form-input" placeholder="New Owner Address (0x...)">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">New Owner Name</label>
+                    <input type="text" id="newOwnerName" class="form-input" placeholder="Enter new owner's name or farm name">
+                    <small style="color: #666; font-size: 0.9rem; margin-top: 0.5rem; display: block;">
+                        This will update the producer/manufacturer name for the crop
+                    </small>
+                </div>
                 <div class="btn-group">
                     <button id="transferOwnershipBtn" class="btn btn-secondary">
                         <i class="fas fa-exchange-alt"></i>
                         Transfer Ownership
+                    </button>
+                </div>
+            </div>
+
+            <!-- Update Manufacturer Name Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="card-title">Update Manufacturer Name</div>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                    <strong>For current owners:</strong> Update your name or farm name without transferring ownership.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Crop ID</label>
+                    <input type="number" id="updateNameCropId" class="form-input" placeholder="Enter Crop ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Manufacturer Name</label>
+                    <input type="text" id="newManufacturerName" class="form-input" placeholder="Enter your new name or farm name">
+                </div>
+                <div class="btn-group">
+                    <button id="updateManufacturerBtn" class="btn btn-secondary">
+                        <i class="fas fa-edit"></i>
+                        Update Name
                     </button>
                 </div>
             </div>
@@ -805,7 +839,7 @@
         }
     </script>
     <script>
-        const contractAddress = "0xB6ed24771aFF37Fb1333CaF1fEc71f3f7675cA5F"; 
+        const contractAddress = "0x65Fd97e0AC9601f7C2f06637B8F33B7C49DB2A07"; 
         const contractABI = [{
       "inputs": [],
       "name": "drugCount",
@@ -942,6 +976,47 @@
         }
       ],
       "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_newOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "_newManufacturer",
+          "type": "string"
+        }
+      ],
+      "name": "transferOwnershipWithName",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_newManufacturer",
+          "type": "string"
+        }
+      ],
+      "name": "updateManufacturer",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1474,6 +1549,7 @@
         async function transferOwnership() {
             const cropId = parseInt(document.getElementById("transferId").value);
             const newOwner = document.getElementById("newOwner").value;
+            const newOwnerName = document.getElementById("newOwnerName").value;
             
             // Validate inputs
             if (!cropId || isNaN(cropId)) {
@@ -1502,18 +1578,43 @@
                 document.getElementById("output").innerText = "Transferring ownership...";
                 document.getElementById("output").classList.remove("error", "success");
                 
-                await contract.methods.transferOwnership(cropId, newOwner).send({ from: userAccount });
+                let transaction;
                 
-                document.getElementById("output").innerHTML = `
+                // Use different contract methods based on whether new owner name is provided
+                if (newOwnerName && newOwnerName.trim() !== "") {
+                    // Transfer ownership and update manufacturer name
+                    transaction = await contract.methods.transferOwnershipWithName(cropId, newOwner, newOwnerName.trim()).send({ from: userAccount });
+                } else {
+                    // Just transfer ownership without changing manufacturer name
+                    transaction = await contract.methods.transferOwnership(cropId, newOwner).send({ from: userAccount });
+                }
+                
+                // Create success message based on what was updated
+                let successMessage = `
                     <div style="background: rgba(40, 167, 69, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid #28a745;">
                         <h4 style="color: #28a745; margin: 0 0 1rem 0;">✅ Ownership Transferred Successfully</h4>
                         <p><strong>Crop ID:</strong> ${cropId}</p>
-                        <p><strong>New Owner:</strong> ${newOwner}</p>
+                        <p><strong>New Owner Address:</strong> ${newOwner}</p>
                         <p><strong>Previous Owner:</strong> ${userAccount}</p>
-                    </div>
                 `;
+                
+                if (newOwnerName && newOwnerName.trim() !== "") {
+                    successMessage += `<p><strong>New Owner Name:</strong> ${newOwnerName.trim()}</p>`;
+                    successMessage += `<p><em style="color: #28a745;">✅ Manufacturer/Producer name has been updated</em></p>`;
+                } else {
+                    successMessage += `<p><em>Manufacturer/Producer name remains unchanged</em></p>`;
+                }
+                
+                successMessage += `</div>`;
+                
+                document.getElementById("output").innerHTML = successMessage;
                 document.getElementById("output").classList.add("success");
                 showNotification("Ownership transferred successfully!", "success");
+                
+                // Clear the form
+                document.getElementById("transferId").value = "";
+                document.getElementById("newOwner").value = "";
+                document.getElementById("newOwnerName").value = "";
                 
             } catch (error) {
                 console.error("Error transferring ownership:", error);
@@ -1532,6 +1633,76 @@
                 document.getElementById("output").innerText = errorMessage;
                 document.getElementById("output").classList.add("error");
                 showNotification("Failed to transfer ownership", "error");
+            }
+        }
+
+        // Function to update manufacturer name only
+        async function updateManufacturerName() {
+            const cropId = parseInt(document.getElementById("updateNameCropId").value);
+            const newManufacturerName = document.getElementById("newManufacturerName").value;
+            
+            // Validate inputs
+            if (!cropId || isNaN(cropId)) {
+                document.getElementById("output").innerText = "Please enter a valid crop ID";
+                document.getElementById("output").classList.add("error");
+                return;
+            }
+            
+            if (!newManufacturerName || newManufacturerName.trim() === "") {
+                document.getElementById("output").innerText = "Please enter a new manufacturer name";
+                document.getElementById("output").classList.add("error");
+                return;
+            }
+
+            // Check if contract is ready
+            if (!isContractReady()) {
+                const status = getContractStatus();
+                document.getElementById("output").innerText = `Contract not ready: ${status}. Please connect your wallet first.`;
+                document.getElementById("output").classList.add("error");
+                showNotification("Please connect your wallet first", "error");
+                return;
+            }
+
+            try {
+                // Show loading state
+                document.getElementById("output").innerText = "Updating manufacturer name...";
+                document.getElementById("output").classList.remove("error", "success");
+                
+                await contract.methods.updateManufacturer(cropId, newManufacturerName.trim()).send({ from: userAccount });
+                
+                document.getElementById("output").innerHTML = `
+                    <div style="background: rgba(40, 167, 69, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h4 style="color: #28a745; margin: 0 0 1rem 0;">✅ Manufacturer Name Updated Successfully</h4>
+                        <p><strong>Crop ID:</strong> ${cropId}</p>
+                        <p><strong>New Manufacturer Name:</strong> ${newManufacturerName.trim()}</p>
+                        <p><strong>Owner:</strong> ${userAccount}</p>
+                        <p><em>Manufacturer/Producer name has been updated on the blockchain</em></p>
+                    </div>
+                `;
+                document.getElementById("output").classList.add("success");
+                showNotification("Manufacturer name updated successfully!", "success");
+                
+                // Clear the form
+                document.getElementById("updateNameCropId").value = "";
+                document.getElementById("newManufacturerName").value = "";
+                
+            } catch (error) {
+                console.error("Error updating manufacturer name:", error);
+                let errorMessage = "Error updating manufacturer name: ";
+                
+                if (error.message.includes("execution reverted")) {
+                    errorMessage += "Transaction failed. You may not be the owner of this crop.";
+                } else if (error.message.includes("user rejected")) {
+                    errorMessage += "Transaction was cancelled by user.";
+                } else if (error.message.includes("insufficient funds")) {
+                    errorMessage += "Insufficient funds for gas fees.";
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                document.getElementById("output").innerText = errorMessage;
+                document.getElementById("output").classList.add("error");
+                showNotification("Failed to update manufacturer name", "error");
             }
         }
 
@@ -1780,6 +1951,7 @@
             document.getElementById("browseMarketplaceBtn").addEventListener("click", browseMarketplace);
             document.getElementById("getCropDetailsBtn").addEventListener("click", getCropDetailsById);
             document.getElementById("transferOwnershipBtn").addEventListener("click", transferOwnership);
+            document.getElementById("updateManufacturerBtn").addEventListener("click", updateManufacturerName);
         });
     </script>
 

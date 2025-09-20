@@ -46,4 +46,19 @@ contract DrugTraceability {
         require(drugs[_id].owner == msg.sender, "You are not the owner");
         drugs[_id].owner = _newOwner;
     }
+
+    // Transfer ownership and update manufacturer name
+    function transferOwnershipWithName(uint256 _id, address _newOwner, string memory _newManufacturer) public {
+        require(drugs[_id].owner != address(0), "Drug not found");
+        require(drugs[_id].owner == msg.sender, "You are not the owner");
+        drugs[_id].owner = _newOwner;
+        drugs[_id].manufacturer = _newManufacturer;
+    }
+
+    // Update manufacturer name (only current owner can do this)
+    function updateManufacturer(uint256 _id, string memory _newManufacturer) public {
+        require(drugs[_id].owner != address(0), "Drug not found");
+        require(drugs[_id].owner == msg.sender, "You are not the owner");
+        drugs[_id].manufacturer = _newManufacturer;
+    }
 }
