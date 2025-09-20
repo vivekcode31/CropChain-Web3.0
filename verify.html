@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Croponchain - Crop Verification</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 2rem;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #514caf;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #514caf;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #514caf 0%, #6c5ce7 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .verification-status {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .status-verified {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .status-invalid {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .crop-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            color: #514caf;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #514caf;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+
+        .blockchain-info {
+            background: #e8f4fd;
+            border: 2px solid #bee5eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .blockchain-info h3 {
+            color: #0c5460;
+            margin-bottom: 15px;
+        }
+
+        .blockchain-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #bee5eb;
+        }
+
+        .blockchain-item:last-child {
+            border-bottom: none;
+        }
+
+        .blockchain-label {
+            font-weight: bold;
+            color: #0c5460;
+        }
+
+        .blockchain-value {
+            color: #0c5460;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #514caf 0%, #6c5ce7 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(81, 76, 175, 0.4);
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #f5c6cb;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #514caf;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .qr-input {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .qr-input h3 {
+            color: #514caf;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #514caf;
+        }
+
+        .input-group button {
+            padding: 12px 20px;
+            background: #514caf;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .input-group button:hover {
+            background: #3d3a8f;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .navbar {
+                margin-bottom: 1rem;
+            }
+
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                <span>Croponchain</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="marketplace.html">Marketplace</a></li>
+                <li><a href="#verify">Verify</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Crop Verification</h1>
+            <p>Verify crop authenticity and traceability on the blockchain</p>
+        </div>
+
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading crop verification...</p>
+            </div>
+
+            <div id="error" class="error-message" style="display: none;">
+                <h3>❌ Verification Failed</h3>
+                <p id="errorText"></p>
+            </div>
+
+            <div id="qrInput" class="qr-input" style="display: none;">
+                <h3>📱 Manual QR Code Input</h3>
+                <p>If you have the QR code data, paste it below:</p>
+                <div class="input-group">
+                    <input type="text" id="qrDataInput" placeholder="Paste QR code data here...">
+                    <button onclick="verifyQRData()">Verify</button>
+                </div>
+            </div>
+
+            <div id="verificationResult" style="display: none;">
+                <div class="verification-status">
+                    <div id="statusBadge" class="status-badge"></div>
+                </div>
+
+                <div class="crop-details">
+                    <div class="detail-section">
+                        <h3>🌱 Crop Information</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Crop ID</div>
+                                <div class="detail-value" id="cropId">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Crop Name</div>
+                                <div class="detail-value" id="cropName">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Quantity</div>
+                                <div class="detail-value" id="quantity">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Price</div>
+                                <div class="detail-value" id="price">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>👨‍🌾 Farmer Information</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Farmer Name</div>
+                                <div class="detail-value" id="farmerName">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Farmer ID</div>
+                                <div class="detail-value" id="farmerId">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Batch Number</div>
+                                <div class="detail-value" id="batchNumber">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Registration Date</div>
+                                <div class="detail-value" id="registrationDate">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>📍 Origin Information</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">State</div>
+                                <div class="detail-value" id="state">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">District Code</div>
+                                <div class="detail-value" id="districtCode">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Post Office Number</div>
+                                <div class="detail-value" id="postOfficeNumber">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="blockchain-info">
+                    <h3>⛓️ Blockchain Verification</h3>
+                    <div class="blockchain-item">
+                        <span class="blockchain-label">Contract Address:</span>
+                        <span class="blockchain-value" id="contractAddress">-</span>
+                    </div>
+                    <div class="blockchain-item">
+                        <span class="blockchain-label">Owner Address:</span>
+                        <span class="blockchain-value" id="ownerAddress">-</span>
+                    </div>
+                    <div class="blockchain-item">
+                        <span class="blockchain-label">Verification URL:</span>
+                        <span class="blockchain-value" id="verificationUrl">-</span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="button" onclick="window.location.href='index.html'">🏠 Back to Home</button>
+                    <button class="button button-secondary" onclick="window.location.href='marketplace.html'">🛒 Browse Marketplace</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script>
+        // Contract configuration
+        const contractAddress = "0xB6ed24771aFF37Fb1333CaF1fEc71f3f7675cA5F";
+        const contractABI = [{
+            "inputs": [],
+            "name": "drugCount",
+            "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+            "stateMutability": "view",
+            "type": "function"
+        }, {
+            "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+            "name": "drugs",
+            "outputs": [
+                {"internalType": "uint256", "name": "id", "type": "uint256"},
+                {"internalType": "string", "name": "name", "type": "string"},
+                {"internalType": "string", "name": "manufacturer", "type": "string"},
+                {"internalType": "uint256", "name": "manufacturingDate", "type": "uint256"},
+                {"internalType": "string", "name": "batchNumber", "type": "string"},
+                {"internalType": "address", "name": "owner", "type": "address"}
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }, {
+            "inputs": [{"internalType": "uint256", "name": "_id", "type": "uint256"}],
+            "name": "getDrugDetails",
+            "outputs": [
+                {"internalType": "uint256", "name": "", "type": "uint256"},
+                {"internalType": "string", "name": "", "type": "string"},
+                {"internalType": "string", "name": "", "type": "string"},
+                {"internalType": "uint256", "name": "", "type": "uint256"},
+                {"internalType": "string", "name": "", "type": "string"},
+                {"internalType": "address", "name": "", "type": "address"}
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }];
+
+        let web3;
+        let contract;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            initWeb3();
+            checkURLParameters();
+        });
+
+        // Initialize Web3
+        async function initWeb3() {
+            try {
+                if (typeof window.ethereum !== 'undefined') {
+                    web3 = new Web3(window.ethereum);
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    console.log("Web3 initialized successfully");
+                } else {
+                    console.log("MetaMask not detected");
+                }
+            } catch (error) {
+                console.error("Error initializing Web3:", error);
+            }
+        }
+
+        // Check URL parameters for QR code data
+        function checkURLParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const qrData = urlParams.get('data');
+            
+            if (qrData) {
+                try {
+                    const decodedData = decodeURIComponent(qrData);
+                    const cropData = JSON.parse(decodedData);
+                    displayCropDetails(cropData);
+                } catch (error) {
+                    console.error("Error parsing QR data:", error);
+                    showError("Invalid QR code data format");
+                }
+            } else {
+                // Show manual input option
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('qrInput').style.display = 'block';
+            }
+        }
+
+        // Verify QR data manually
+        function verifyQRData() {
+            const qrData = document.getElementById('qrDataInput').value.trim();
+            
+            if (!qrData) {
+                alert("Please enter QR code data");
+                return;
+            }
+
+            try {
+                const cropData = JSON.parse(qrData);
+                displayCropDetails(cropData);
+            } catch (error) {
+                console.error("Error parsing QR data:", error);
+                showError("Invalid QR code data format. Please check the data and try again.");
+            }
+        }
+
+        // Display crop details
+        async function displayCropDetails(cropData) {
+            try {
+                // Hide loading and show result
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('qrInput').style.display = 'none';
+                document.getElementById('verificationResult').style.display = 'block';
+
+                // Verify data structure
+                if (!cropData.type || cropData.type !== 'Croponchain') {
+                    showError("Invalid QR code type. This is not a Croponchain QR code.");
+                    return;
+                }
+
+                // Set verification status
+                const statusBadge = document.getElementById('statusBadge');
+                statusBadge.textContent = '✅ Verified on Blockchain';
+                statusBadge.className = 'status-badge status-verified';
+
+                // Populate crop information
+                document.getElementById('cropId').textContent = cropData.cropId || '-';
+                document.getElementById('cropName').textContent = cropData.cropName || '-';
+                document.getElementById('quantity').textContent = `${cropData.quantity || '-'} ${cropData.unit || 'kg'}`;
+                document.getElementById('price').textContent = `₹${cropData.price || '-'} ${cropData.currency || 'INR'}`;
+
+                // Populate farmer information
+                document.getElementById('farmerName').textContent = cropData.farmerName || '-';
+                document.getElementById('farmerId').textContent = cropData.farmerId || '-';
+                document.getElementById('batchNumber').textContent = cropData.batchNumber || '-';
+                document.getElementById('registrationDate').textContent = cropData.registrationDate || '-';
+
+                // Populate origin information
+                if (cropData.origin) {
+                    document.getElementById('state').textContent = cropData.origin.state || '-';
+                    document.getElementById('districtCode').textContent = cropData.origin.districtCode || '-';
+                    document.getElementById('postOfficeNumber').textContent = cropData.origin.postOfficeNumber || '-';
+                }
+
+                // Populate blockchain information
+                if (cropData.blockchain) {
+                    document.getElementById('contractAddress').textContent = cropData.blockchain.contractAddress || '-';
+                    document.getElementById('ownerAddress').textContent = cropData.blockchain.owner || '-';
+                }
+                
+                if (cropData.verification) {
+                    document.getElementById('verificationUrl').textContent = cropData.verification.url || '-';
+                }
+
+                // Verify on blockchain if possible
+                if (web3 && contract && cropData.cropId) {
+                    await verifyOnBlockchain(cropData);
+                }
+
+            } catch (error) {
+                console.error("Error displaying crop details:", error);
+                showError("Error displaying crop details: " + error.message);
+            }
+        }
+
+        // Verify crop on blockchain
+        async function verifyOnBlockchain(cropData) {
+            try {
+                // Extract numeric ID from crop ID (e.g., "C001" -> 1)
+                const numericId = parseInt(cropData.cropId.replace('C', ''));
+                
+                if (isNaN(numericId)) {
+                    console.log("Invalid crop ID format");
+                    return;
+                }
+
+                // Get crop details from blockchain
+                const blockchainData = await contract.methods.getDrugDetails(numericId).call();
+                
+                if (blockchainData && blockchainData[0] && blockchainData[0] !== '0') {
+                    // Verify the data matches
+                    const isVerified = (
+                        blockchainData[1] === cropData.cropName &&
+                        blockchainData[2] === cropData.farmerName &&
+                        blockchainData[4] === cropData.batchNumber
+                    );
+
+                    if (isVerified) {
+                        console.log("✅ Blockchain verification successful");
+                    } else {
+                        console.log("⚠️ Blockchain verification failed - data mismatch");
+                        const statusBadge = document.getElementById('statusBadge');
+                        statusBadge.textContent = '⚠️ Data Mismatch';
+                        statusBadge.className = 'status-badge status-pending';
+                    }
+                } else {
+                    console.log("❌ Crop not found on blockchain");
+                    const statusBadge = document.getElementById('statusBadge');
+                    statusBadge.textContent = '❌ Not Found on Blockchain';
+                    statusBadge.className = 'status-badge status-invalid';
+                }
+
+            } catch (error) {
+                console.error("Error verifying on blockchain:", error);
+                const statusBadge = document.getElementById('statusBadge');
+                statusBadge.textContent = '⚠️ Verification Failed';
+                statusBadge.className = 'status-badge status-pending';
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('qrInput').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+    </script>
+</body>
+</html>
