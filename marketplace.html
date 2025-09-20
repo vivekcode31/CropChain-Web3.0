@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="google-site-verification" content="Zpk75pai0n043qoYJTK1cpq6zJuKxmftDDkXGzBhk7M" />
+    <title>Crop Marketplace - Crop Onchain</title>
+    <link rel="icon" href="data:,"> <!-- Prevent favicon 404 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #544caf;
+            margin-bottom: 30px;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #514caf;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: #4549a0;
+        }
+        .back-button {
+            background-color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+        .error { color: red; }
+        .success { color: rgb(30, 0, 128); }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .marketplace-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .marketplace-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .marketplace-card h4 {
+            color: #514caf;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .price-tag {
+            background-color: #514caf;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .farmer-info {
+            color: #666;
+            font-size: 14px;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        .batch-info {
+            background-color: #e8f4fd;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #514caf;
+        }
+        .crop-header {
+            background: linear-gradient(135deg, #514caf, #6c5ce7);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .crop-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .crop-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .stats-bar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #514caf;
+        }
+        .contact-button {
+            background-color: #28a745;
+            font-size: 14px;
+            padding: 8px 15px;
+            margin-top: 10px;
+        }
+        .contact-button:hover {
+            background-color: #218838;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="button back-button">← Back to Registration</a>
+        
+        <h1>Crop Marketplace</h1>
+        
+        <!-- Debug section (remove in production) -->
+        <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px;">
+            <strong>Debug Info:</strong><br>
+            <span id="debugInfo">Loading...</span>
+        </div>
+        
+        <div id="cropHeader" class="crop-header" style="display: none;">
+            <h2 id="cropTitle"></h2>
+            <p id="cropSubtitle"></p>
+        </div>
+        
+        <div id="statsBar" class="stats-bar" style="display: none;">
+            <strong id="statsText"></strong>
+        </div>
+        
+        <div id="loadingMessage" class="loading">
+            <h3>Loading marketplace data...</h3>
+            <p>Please wait while we fetch all farmers selling this crop.</p>
+        </div>
+        
+        <div id="marketplaceContent" style="display: none;">
+            <div id="marketplaceResults" class="grid-container"></div>
+        </div>
+        
+        <div id="noResults" class="no-results" style="display: none;">
+            <h3>No farmers found</h3>
+            <p>No farmers have registered this crop yet. Be the first to register!</p>
+            <a href="index.html" class="button">Register Your Crop</a>
+        </div>
+        
+        <div id="errorMessage" class="output error" style="display: none;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script>
+        const contractAddress = "0xB6ed24771aFF37Fb1333CaF1fEc71f3f7675cA5F"; 
+        const contractABI = [{
+      "inputs": [],
+      "name": "drugCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "drugs",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "manufacturer",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "batchNumber",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllRegisteredDrugs",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDrugDetails",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_manufacturer",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_batchNumber",
+          "type": "string"
+        }
+      ],
+      "name": "registerDrug",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
+
+        // Standardized crop database with unique IDs
+        const cropDatabase = [
+            // Cereals (C001-C020)
+            { id: "C001", name: "Rice", category: "Cereal" },
+            { id: "C002", name: "Wheat", category: "Cereal" },
+            { id: "C003", name: "Maize", category: "Cereal" },
+            { id: "C004", name: "Barley", category: "Cereal" },
+            { id: "C005", name: "Pearl Millet (Bajra)", category: "Cereal" },
+            { id: "C006", name: "Finger Millet (Ragi)", category: "Cereal" },
+            { id: "C007", name: "Sorghum (Jowar)", category: "Cereal" },
+            { id: "C008", name: "Foxtail Millet", category: "Cereal" },
+            { id: "C009", name: "Little Millet", category: "Cereal" },
+            { id: "C010", name: "Kodo Millet", category: "Cereal" },
+            { id: "C011", name: "Proso Millet", category: "Cereal" },
+            { id: "C012", name: "Barnyard Millet", category: "Cereal" },
+            { id: "C013", name: "Oats", category: "Cereal" },
+            { id: "C014", name: "Quinoa", category: "Cereal" },
+            { id: "C015", name: "Buckwheat", category: "Cereal" },
+
+            // Pulses (C016-C035)
+            { id: "C016", name: "Chickpea (Chana)", category: "Pulse" },
+            { id: "C017", name: "Pigeon Pea (Arhar/Tur)", category: "Pulse" },
+            { id: "C018", name: "Black Gram (Urad)", category: "Pulse" },
+            { id: "C019", name: "Green Gram (Moong)", category: "Pulse" },
+            { id: "C020", name: "Lentil (Masoor)", category: "Pulse" },
+            { id: "C021", name: "Red Kidney Bean (Rajma)", category: "Pulse" },
+            { id: "C022", name: "Black Eyed Pea (Lobia)", category: "Pulse" },
+            { id: "C023", name: "Horse Gram", category: "Pulse" },
+            { id: "C024", name: "Moth Bean", category: "Pulse" },
+            { id: "C025", name: "Cowpea", category: "Pulse" },
+            { id: "C026", name: "Field Pea", category: "Pulse" },
+            { id: "C027", name: "Broad Bean", category: "Pulse" },
+            { id: "C028", name: "Lima Bean", category: "Pulse" },
+            { id: "C029", name: "Adzuki Bean", category: "Pulse" },
+            { id: "C030", name: "Mung Bean", category: "Pulse" },
+
+            // Oilseeds (C031-C050)
+            { id: "C031", name: "Groundnut (Peanut)", category: "Oilseed" },
+            { id: "C032", name: "Mustard", category: "Oilseed" },
+            { id: "C033", name: "Sesame (Til)", category: "Oilseed" },
+            { id: "C034", name: "Sunflower", category: "Oilseed" },
+            { id: "C035", name: "Soybean", category: "Oilseed" },
+            { id: "C036", name: "Safflower", category: "Oilseed" },
+            { id: "C037", name: "Niger", category: "Oilseed" },
+            { id: "C038", name: "Castor", category: "Oilseed" },
+            { id: "C039", name: "Linseed", category: "Oilseed" },
+            { id: "C040", name: "Rapeseed", category: "Oilseed" },
+            { id: "C041", name: "Cottonseed", category: "Oilseed" },
+            { id: "C042", name: "Coconut", category: "Oilseed" },
+            { id: "C043", name: "Palm Oil", category: "Oilseed" },
+            { id: "C044", name: "Olive", category: "Oilseed" },
+            { id: "C045", name: "Jatropha", category: "Oilseed" },
+
+            // Commercial Crops (C046-C065)
+            { id: "C046", name: "Sugarcane", category: "Commercial" },
+            { id: "C047", name: "Cotton", category: "Commercial" },
+            { id: "C048", name: "Jute", category: "Commercial" },
+            { id: "C049", name: "Tobacco", category: "Commercial" },
+            { id: "C050", name: "Tea", category: "Commercial" },
+            { id: "C051", name: "Coffee", category: "Commercial" },
+            { id: "C052", name: "Rubber", category: "Commercial" },
+            { id: "C053", name: "Spices (Mixed)", category: "Commercial" },
+            { id: "C054", name: "Turmeric", category: "Commercial" },
+            { id: "C055", name: "Ginger", category: "Commercial" },
+            { id: "C056", name: "Black Pepper", category: "Commercial" },
+            { id: "C057", name: "Cardamom", category: "Commercial" },
+            { id: "C058", name: "Cinnamon", category: "Commercial" },
+            { id: "C059", name: "Cloves", category: "Commercial" },
+            { id: "C060", name: "Nutmeg", category: "Commercial" },
+
+            // Fruits (C061-C085)
+            { id: "C061", name: "Mango", category: "Fruit" },
+            { id: "C062", name: "Banana", category: "Fruit" },
+            { id: "C063", name: "Apple", category: "Fruit" },
+            { id: "C064", name: "Orange", category: "Fruit" },
+            { id: "C065", name: "Grape", category: "Fruit" },
+            { id: "C066", name: "Pomegranate", category: "Fruit" },
+            { id: "C067", name: "Guava", category: "Fruit" },
+            { id: "C068", name: "Papaya", category: "Fruit" },
+            { id: "C069", name: "Coconut", category: "Fruit" },
+            { id: "C070", name: "Lemon", category: "Fruit" },
+            { id: "C071", name: "Lime", category: "Fruit" },
+            { id: "C072", name: "Sweet Lime", category: "Fruit" },
+            { id: "C073", name: "Custard Apple", category: "Fruit" },
+            { id: "C074", name: "Jackfruit", category: "Fruit" },
+            { id: "C075", name: "Jamun", category: "Fruit" },
+            { id: "C076", name: "Ber", category: "Fruit" },
+            { id: "C077", name: "Amla", category: "Fruit" },
+            { id: "C078", name: "Fig", category: "Fruit" },
+            { id: "C079", name: "Date Palm", category: "Fruit" },
+            { id: "C080", name: "Kiwi", category: "Fruit" },
+
+            // Vegetables (C081-C110)
+            { id: "C081", name: "Potato", category: "Vegetable" },
+            { id: "C082", name: "Onion", category: "Vegetable" },
+            { id: "C083", name: "Tomato", category: "Vegetable" },
+            { id: "C084", name: "Brinjal (Eggplant)", category: "Vegetable" },
+            { id: "C085", name: "Okra (Lady's Finger)", category: "Vegetable" },
+            { id: "C086", name: "Cauliflower", category: "Vegetable" },
+            { id: "C087", name: "Cabbage", category: "Vegetable" },
+            { id: "C088", name: "Carrot", category: "Vegetable" },
+            { id: "C089", name: "Radish", category: "Vegetable" },
+            { id: "C090", name: "Beetroot", category: "Vegetable" },
+            { id: "C091", name: "Spinach", category: "Vegetable" },
+            { id: "C092", name: "Fenugreek (Methi)", category: "Vegetable" },
+            { id: "C093", name: "Coriander", category: "Vegetable" },
+            { id: "C094", name: "Mint", category: "Vegetable" },
+            { id: "C095", name: "Cucumber", category: "Vegetable" },
+            { id: "C096", name: "Bottle Gourd", category: "Vegetable" },
+            { id: "C097", name: "Ridge Gourd", category: "Vegetable" },
+            { id: "C098", name: "Bitter Gourd", category: "Vegetable" },
+            { id: "C099", name: "Snake Gourd", category: "Vegetable" },
+            { id: "C100", name: "Ash Gourd", category: "Vegetable" },
+            { id: "C101", name: "Pumpkin", category: "Vegetable" },
+            { id: "C102", name: "Green Peas", category: "Vegetable" },
+            { id: "C103", name: "French Beans", category: "Vegetable" },
+            { id: "C104", name: "Cluster Beans", category: "Vegetable" },
+            { id: "C105", name: "Drumstick", category: "Vegetable" },
+            { id: "C106", name: "Sweet Potato", category: "Vegetable" },
+            { id: "C107", name: "Tapioca", category: "Vegetable" },
+            { id: "C108", name: "Yam", category: "Vegetable" },
+            { id: "C109", name: "Colocasia", category: "Vegetable" },
+            { id: "C110", name: "Elephant Foot Yam", category: "Vegetable" }
+        ];
+
+        let web3;
+        let contract;
+
+        // Initialize Web3
+        async function initWeb3() {
+            if (typeof window.ethereum !== "undefined") {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+                return true;
+            } else {
+                showError("Please install MetaMask to use the marketplace.");
+                return false;
+            }
+        }
+
+        // Get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById("loadingMessage").style.display = "none";
+            document.getElementById("errorMessage").innerText = message;
+            document.getElementById("errorMessage").style.display = "block";
+        }
+
+        // Load marketplace data
+        async function loadMarketplace() {
+            let cropId = getUrlParameter('cropId');
+            let cropName = getUrlParameter('cropName');
+            
+            // Debug: Log the URL and parameters
+            console.log("Current URL:", window.location.href);
+            console.log("Crop ID from URL:", cropId);
+            console.log("Crop Name from URL:", cropName);
+            console.log("All URL params:", window.location.search);
+            
+            // Show debug info on page
+            document.getElementById("debugInfo").innerHTML = `
+                URL: ${window.location.href}<br>
+                Crop ID from URL: ${cropId || 'null'}<br>
+                Crop Name from URL: ${cropName || 'null'}<br>
+                URL Search: ${window.location.search}
+            `;
+            
+            // Fallback: Try to get data from localStorage if URL parameters are missing
+            if (!cropId || !cropName) {
+                console.log("URL parameters missing, trying localStorage...");
+                try {
+                    const storedData = localStorage.getItem('selectedCropData');
+                    if (storedData) {
+                        const data = JSON.parse(storedData);
+                        // Check if data is recent (within last 5 minutes)
+                        if (Date.now() - data.timestamp < 300000) {
+                            cropId = data.cropId;
+                            cropName = data.cropName;
+                            console.log("Using localStorage data:", data);
+                            
+                            // Update debug info
+                            document.getElementById("debugInfo").innerHTML += `<br>Using localStorage: ${JSON.stringify(data)}`;
+                        }
+                    }
+                } catch (e) {
+                    console.log("Error reading localStorage:", e);
+                }
+            }
+            
+            if (!cropId || !cropName) {
+                showError(`Invalid crop selection. Please go back and select a crop. 
+                Debug info: cropId=${cropId}, cropName=${cropName}, URL=${window.location.href}`);
+                return;
+            }
+
+            // Show crop header
+            document.getElementById("cropTitle").textContent = cropName;
+            document.getElementById("cropSubtitle").textContent = `Crop ID: ${cropId} | Browse all farmers selling this crop`;
+            document.getElementById("cropHeader").style.display = "block";
+
+            const numericId = parseInt(cropId.replace('C', ''));
+
+            try {
+                // Get all registered crops from blockchain
+                const allRegisteredIds = await contract.methods.getAllRegisteredDrugs().call();
+                
+                // Filter crops by the selected crop type
+                const matchingCrops = [];
+                
+                for (let i = 0; i < allRegisteredIds.length; i++) {
+                    const cropId = allRegisteredIds[i];
+                    const cropDetails = await contract.methods.getDrugDetails(cropId).call();
+                    
+                    // Check if this crop matches our selected crop type by comparing the crop ID
+                    if (parseInt(cropId) === numericId) {
+                        matchingCrops.push({
+                            id: cropId,
+                            name: cropDetails[0], // cropDetails[0] is the name
+                            manufacturer: cropDetails[1], // cropDetails[1] is the manufacturer
+                            batchNumber: cropDetails[2], // cropDetails[2] is the batch number
+                            owner: cropDetails[3] // cropDetails[3] is the owner
+                        });
+                    }
+                }
+
+                // Get price data from localStorage
+                const cropsWithPrices = [];
+                for (let key in localStorage) {
+                    if (key.startsWith('crop_')) {
+                        try {
+                            const cropData = JSON.parse(localStorage.getItem(key));
+                            if (cropData.id === numericId) {
+                                // Find matching blockchain data
+                                const blockchainData = matchingCrops.find(crop => 
+                                    crop.manufacturer === cropData.manufacturer && 
+                                    crop.batchNumber === cropData.batchNumber
+                                );
+                                
+                                if (blockchainData) {
+                                    cropsWithPrices.push({
+                                        ...blockchainData,
+                                        price: cropData.price,
+                                        timestamp: cropData.timestamp
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            // Skip invalid data
+                        }
+                    }
+                }
+
+                // Hide loading message
+                document.getElementById("loadingMessage").style.display = "none";
+
+                // Display results
+                if (cropsWithPrices.length === 0) {
+                    document.getElementById("noResults").style.display = "block";
+                } else {
+                    // Sort by price (lowest first)
+                    cropsWithPrices.sort((a, b) => a.price - b.price);
+                    
+                    // Show stats
+                    const minPrice = Math.min(...cropsWithPrices.map(c => c.price));
+                    const maxPrice = Math.max(...cropsWithPrices.map(c => c.price));
+                    const avgPrice = (cropsWithPrices.reduce((sum, c) => sum + c.price, 0) / cropsWithPrices.length).toFixed(2);
+                    
+                    document.getElementById("statsText").innerHTML = `
+                        <strong>${cropsWithPrices.length} farmers found</strong> | 
+                        Price Range: ₹${minPrice} - ₹${maxPrice} | 
+                        Average Price: ₹${avgPrice}
+                    `;
+                    document.getElementById("statsBar").style.display = "block";
+                    
+                    // Display marketplace cards
+                    const marketplaceResults = document.getElementById("marketplaceResults");
+                    let html = "";
+                    
+                    cropsWithPrices.forEach((crop, index) => {
+                        const date = new Date(crop.timestamp).toLocaleDateString();
+                        const isLowestPrice = crop.price === minPrice;
+                        const priceClass = isLowestPrice ? "price-tag" : "price-tag";
+                        const priceStyle = isLowestPrice ? "background-color: #28a745;" : "";
+                        
+                        html += `
+                            <div class="marketplace-card">
+                                <h4>Farmer ${index + 1} ${isLowestPrice ? '🏆 (Best Price)' : ''}</h4>
+                                <div class="${priceClass}" style="${priceStyle}">₹${crop.price} per unit</div>
+                                <div class="farmer-info"><strong>Farmer:</strong> ${crop.manufacturer}</div>
+                                <div class="farmer-info"><strong>Owner Address:</strong> ${crop.owner}</div>
+                                <div class="batch-info"><strong>Batch Number:</strong> ${crop.batchNumber}</div>
+                                <div class="farmer-info"><strong>Registered:</strong> ${date}</div>
+                                <button class="button contact-button" onclick="copyAddress('${crop.owner}')">📋 Copy Address</button>
+                            </div>
+                        `;
+                    });
+                    
+                    marketplaceResults.innerHTML = html;
+                    document.getElementById("marketplaceContent").style.display = "block";
+                }
+
+            } catch (error) {
+                showError("Error loading marketplace: " + error.message);
+            }
+        }
+
+        // Copy address to clipboard
+        function copyAddress(address) {
+            navigator.clipboard.writeText(address).then(() => {
+                alert("Address copied to clipboard!");
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement("textarea");
+                textArea.value = address;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                alert("Address copied to clipboard!");
+            });
+        }
+
+        // Initialize when page loads
+        window.addEventListener("DOMContentLoaded", async () => {
+            const web3Connected = await initWeb3();
+            if (web3Connected) {
+                await loadMarketplace();
+            }
+        });
+    </script>
+</body>
+</html>

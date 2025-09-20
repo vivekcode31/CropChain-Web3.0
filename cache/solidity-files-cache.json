@@ -1,44 +1,9 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "C:\\Users\\drago\\Desktop\\code\\final projects\\drug-traceability\\contracts\\DrugTraceability.sol": {
-      "lastModificationDate": 1757524300813,
-      "contentHash": "c1a7de1f346b987bca8ae4cef8762581",
-      "sourceName": "contracts/DrugTraceability.sol",
-      "solcConfig": {
-        "version": "0.8.18",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "DrugTraceability"
-      ]
-    },
-    "C:\\Users\\drago\\Desktop\\code\\SiH\\contracts\\DrugTraceability.sol": {
-      "lastModificationDate": 1757524300813,
-      "contentHash": "c1a7de1f346b987bca8ae4cef8762581",
+    "D:\\Stack\\xyz\\Croponchain\\contracts\\DrugTraceability.sol": {
+      "lastModificationDate": 1758369483077,
+      "contentHash": "4fcb57d58ace978e617b83bf550fd083",
       "sourceName": "contracts/DrugTraceability.sol",
       "solcConfig": {
         "version": "0.8.18",

@@ -52,6 +52,56 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+        .input-field:read-only {
+            background-color: #f9f9f9;
+            color: #666;
+        }
+        h3 {
+            color: #514caf;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .batch-display {
+            background-color: #e8f4fd;
+            border: 2px solid #514caf;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .marketplace-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .marketplace-card h4 {
+            color: #514caf;
+            margin: 0 0 10px 0;
+        }
+        .price-tag {
+            background-color: #514caf;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .farmer-info {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .batch-info {
+            background-color: #e8f4fd;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -63,15 +113,74 @@
         <div id="connectionStatus" class="output"></div>
 
         <h2>Register Your Crop</h2>
-        <input type="number" id="cropId" class="input-field" placeholder="Crop ID">
-        <input type="text" id="cropName" class="input-field" placeholder="Crop Name">
+        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+            <strong>Step 1:</strong> Select your crop from the dropdown below. The Crop ID will be automatically assigned.
+        </p>
+        <input type="text" id="cropId" class="input-field" placeholder="Crop ID (auto-selected)" readonly>
+        <select id="cropName" class="input-field">
+            <option value="">Select Crop Name</option>
+        </select>
         <input type="text" id="cropManufacturer" class="input-field" placeholder="Farmer / Producer">
-        <input type="text" id="cropBatchNumber" class="input-field" placeholder="Batch Number">
+        <input type="number" id="cropPrice" class="input-field" placeholder="Price per unit (₹)" step="0.01" min="0">
+        
+        <h3>Location Details (for Batch Number Generation)</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+            <strong>How it works:</strong> Fill in your location details below, then click "Generate Batch Number". 
+            The system will create a unique batch number using your state code, district, post office number, 
+            current date, and your wallet address. Example: <code>OD-14-102-190925-A3F9</code>
+        </p>
+        <select id="stateSelect" class="input-field">
+            <option value="">Select State</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+            <option value="West Bengal">West Bengal</option>
+        </select>
+        <input type="number" id="districtCode" class="input-field" placeholder="District Code (e.g., 14)">
+        <input type="number" id="postOfficeNumber" class="input-field" placeholder="Post Office Number (e.g., 102)">
+        
+        <button id="generateBatchBtn" class="button">Generate Batch Number</button>
+        <div id="generatedBatch" class="batch-display" style="display: none;"></div>
+        
+        <input type="text" id="cropBatchNumber" class="input-field" placeholder="Batch Number (auto-generated)" readonly>
         <button id="registerCropBtn" class="button">Register Crop</button>
 
-        <h2>Get Crop Details by ID</h2>
+        <h2>Crop Marketplace</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+            <strong>Browse all farmers selling the same crop:</strong> Select a crop to see all farmers who have registered it, along with their prices and details.
+        </p>
+        <select id="marketplaceCropSelect" class="input-field">
+            <option value="">Select Crop to Browse Marketplace</option>
+        </select>
+        <button id="browseMarketplaceBtn" class="button">Browse Marketplace</button>
+        
+        <h2>Get Individual Crop Details</h2>
         <input type="number" id="cropIdForDetails" class="input-field" placeholder="Enter Crop ID">
-        <button id="getCropDetailsBtn" class="button">Get Crop Details</button>
+        <button id="getCropDetailsBtn" class="button">Get Individual Details</button>
 
         <h2>Transfer Ownership</h2>
         <input type="number" id="transferId" class="input-field" placeholder="Crop ID">
@@ -230,6 +339,210 @@
         let contract;
         let userAccount;
 
+        // State code mapping for batch number generation
+        const stateCodes = {
+            "Andhra Pradesh": "AP",
+            "Arunachal Pradesh": "AR",
+            "Assam": "AS",
+            "Bihar": "BR",
+            "Chhattisgarh": "CG",
+            "Goa": "GA",
+            "Gujarat": "GJ",
+            "Haryana": "HR",
+            "Himachal Pradesh": "HP",
+            "Jharkhand": "JH",
+            "Karnataka": "KA",
+            "Kerala": "KL",
+            "Madhya Pradesh": "MP",
+            "Maharashtra": "MH",
+            "Manipur": "MN",
+            "Meghalaya": "ML",
+            "Mizoram": "MZ",
+            "Nagaland": "NL",
+            "Odisha": "OD",
+            "Punjab": "PB",
+            "Rajasthan": "RJ",
+            "Sikkim": "SK",
+            "Tamil Nadu": "TN",
+            "Telangana": "TG",
+            "Tripura": "TR",
+            "Uttar Pradesh": "UP",
+            "Uttarakhand": "UK",
+            "West Bengal": "WB"
+        };
+
+        // Standardized crop database with unique IDs
+        const cropDatabase = [
+            // Cereals (C001-C020)
+            { id: "C001", name: "Rice", category: "Cereal" },
+            { id: "C002", name: "Wheat", category: "Cereal" },
+            { id: "C003", name: "Maize", category: "Cereal" },
+            { id: "C004", name: "Barley", category: "Cereal" },
+            { id: "C005", name: "Pearl Millet (Bajra)", category: "Cereal" },
+            { id: "C006", name: "Finger Millet (Ragi)", category: "Cereal" },
+            { id: "C007", name: "Sorghum (Jowar)", category: "Cereal" },
+            { id: "C008", name: "Foxtail Millet", category: "Cereal" },
+            { id: "C009", name: "Little Millet", category: "Cereal" },
+            { id: "C010", name: "Kodo Millet", category: "Cereal" },
+            { id: "C011", name: "Proso Millet", category: "Cereal" },
+            { id: "C012", name: "Barnyard Millet", category: "Cereal" },
+            { id: "C013", name: "Oats", category: "Cereal" },
+            { id: "C014", name: "Quinoa", category: "Cereal" },
+            { id: "C015", name: "Buckwheat", category: "Cereal" },
+
+            // Pulses (C016-C035)
+            { id: "C016", name: "Chickpea (Chana)", category: "Pulse" },
+            { id: "C017", name: "Pigeon Pea (Arhar/Tur)", category: "Pulse" },
+            { id: "C018", name: "Black Gram (Urad)", category: "Pulse" },
+            { id: "C019", name: "Green Gram (Moong)", category: "Pulse" },
+            { id: "C020", name: "Lentil (Masoor)", category: "Pulse" },
+            { id: "C021", name: "Red Kidney Bean (Rajma)", category: "Pulse" },
+            { id: "C022", name: "Black Eyed Pea (Lobia)", category: "Pulse" },
+            { id: "C023", name: "Horse Gram", category: "Pulse" },
+            { id: "C024", name: "Moth Bean", category: "Pulse" },
+            { id: "C025", name: "Cowpea", category: "Pulse" },
+            { id: "C026", name: "Field Pea", category: "Pulse" },
+            { id: "C027", name: "Broad Bean", category: "Pulse" },
+            { id: "C028", name: "Lima Bean", category: "Pulse" },
+            { id: "C029", name: "Adzuki Bean", category: "Pulse" },
+            { id: "C030", name: "Mung Bean", category: "Pulse" },
+
+            // Oilseeds (C031-C050)
+            { id: "C031", name: "Groundnut (Peanut)", category: "Oilseed" },
+            { id: "C032", name: "Mustard", category: "Oilseed" },
+            { id: "C033", name: "Sesame (Til)", category: "Oilseed" },
+            { id: "C034", name: "Sunflower", category: "Oilseed" },
+            { id: "C035", name: "Soybean", category: "Oilseed" },
+            { id: "C036", name: "Safflower", category: "Oilseed" },
+            { id: "C037", name: "Niger", category: "Oilseed" },
+            { id: "C038", name: "Castor", category: "Oilseed" },
+            { id: "C039", name: "Linseed", category: "Oilseed" },
+            { id: "C040", name: "Rapeseed", category: "Oilseed" },
+            { id: "C041", name: "Cottonseed", category: "Oilseed" },
+            { id: "C042", name: "Coconut", category: "Oilseed" },
+            { id: "C043", name: "Palm Oil", category: "Oilseed" },
+            { id: "C044", name: "Olive", category: "Oilseed" },
+            { id: "C045", name: "Jatropha", category: "Oilseed" },
+
+            // Commercial Crops (C046-C065)
+            { id: "C046", name: "Sugarcane", category: "Commercial" },
+            { id: "C047", name: "Cotton", category: "Commercial" },
+            { id: "C048", name: "Jute", category: "Commercial" },
+            { id: "C049", name: "Tobacco", category: "Commercial" },
+            { id: "C050", name: "Tea", category: "Commercial" },
+            { id: "C051", name: "Coffee", category: "Commercial" },
+            { id: "C052", name: "Rubber", category: "Commercial" },
+            { id: "C053", name: "Spices (Mixed)", category: "Commercial" },
+            { id: "C054", name: "Turmeric", category: "Commercial" },
+            { id: "C055", name: "Ginger", category: "Commercial" },
+            { id: "C056", name: "Black Pepper", category: "Commercial" },
+            { id: "C057", name: "Cardamom", category: "Commercial" },
+            { id: "C058", name: "Cinnamon", category: "Commercial" },
+            { id: "C059", name: "Cloves", category: "Commercial" },
+            { id: "C060", name: "Nutmeg", category: "Commercial" },
+
+            // Fruits (C061-C085)
+            { id: "C061", name: "Mango", category: "Fruit" },
+            { id: "C062", name: "Banana", category: "Fruit" },
+            { id: "C063", name: "Apple", category: "Fruit" },
+            { id: "C064", name: "Orange", category: "Fruit" },
+            { id: "C065", name: "Grape", category: "Fruit" },
+            { id: "C066", name: "Pomegranate", category: "Fruit" },
+            { id: "C067", name: "Guava", category: "Fruit" },
+            { id: "C068", name: "Papaya", category: "Fruit" },
+            { id: "C069", name: "Coconut", category: "Fruit" },
+            { id: "C070", name: "Lemon", category: "Fruit" },
+            { id: "C071", name: "Lime", category: "Fruit" },
+            { id: "C072", name: "Sweet Lime", category: "Fruit" },
+            { id: "C073", name: "Custard Apple", category: "Fruit" },
+            { id: "C074", name: "Jackfruit", category: "Fruit" },
+            { id: "C075", name: "Jamun", category: "Fruit" },
+            { id: "C076", name: "Ber", category: "Fruit" },
+            { id: "C077", name: "Amla", category: "Fruit" },
+            { id: "C078", name: "Fig", category: "Fruit" },
+            { id: "C079", name: "Date Palm", category: "Fruit" },
+            { id: "C080", name: "Kiwi", category: "Fruit" },
+
+            // Vegetables (C081-C110)
+            { id: "C081", name: "Potato", category: "Vegetable" },
+            { id: "C082", name: "Onion", category: "Vegetable" },
+            { id: "C083", name: "Tomato", category: "Vegetable" },
+            { id: "C084", name: "Brinjal (Eggplant)", category: "Vegetable" },
+            { id: "C085", name: "Okra (Lady's Finger)", category: "Vegetable" },
+            { id: "C086", name: "Cauliflower", category: "Vegetable" },
+            { id: "C087", name: "Cabbage", category: "Vegetable" },
+            { id: "C088", name: "Carrot", category: "Vegetable" },
+            { id: "C089", name: "Radish", category: "Vegetable" },
+            { id: "C090", name: "Beetroot", category: "Vegetable" },
+            { id: "C091", name: "Spinach", category: "Vegetable" },
+            { id: "C092", name: "Fenugreek (Methi)", category: "Vegetable" },
+            { id: "C093", name: "Coriander", category: "Vegetable" },
+            { id: "C094", name: "Mint", category: "Vegetable" },
+            { id: "C095", name: "Cucumber", category: "Vegetable" },
+            { id: "C096", name: "Bottle Gourd", category: "Vegetable" },
+            { id: "C097", name: "Ridge Gourd", category: "Vegetable" },
+            { id: "C098", name: "Bitter Gourd", category: "Vegetable" },
+            { id: "C099", name: "Snake Gourd", category: "Vegetable" },
+            { id: "C100", name: "Ash Gourd", category: "Vegetable" },
+            { id: "C101", name: "Pumpkin", category: "Vegetable" },
+            { id: "C102", name: "Green Peas", category: "Vegetable" },
+            { id: "C103", name: "French Beans", category: "Vegetable" },
+            { id: "C104", name: "Cluster Beans", category: "Vegetable" },
+            { id: "C105", name: "Drumstick", category: "Vegetable" },
+            { id: "C106", name: "Sweet Potato", category: "Vegetable" },
+            { id: "C107", name: "Tapioca", category: "Vegetable" },
+            { id: "C108", name: "Yam", category: "Vegetable" },
+            { id: "C109", name: "Colocasia", category: "Vegetable" },
+            { id: "C110", name: "Elephant Foot Yam", category: "Vegetable" }
+        ];
+
+        // Function to populate crop dropdown
+        function populateCropDropdown() {
+            const cropSelect = document.getElementById("cropName");
+            const marketplaceSelect = document.getElementById("marketplaceCropSelect");
+            
+            // Group crops by category
+            const categories = {};
+            cropDatabase.forEach(crop => {
+                if (!categories[crop.category]) {
+                    categories[crop.category] = [];
+                }
+                categories[crop.category].push(crop);
+            });
+
+            // Add options grouped by category to both dropdowns
+            [cropSelect, marketplaceSelect].forEach(select => {
+                Object.keys(categories).forEach(category => {
+                    const optgroup = document.createElement("optgroup");
+                    optgroup.label = category;
+                    
+                    categories[category].forEach(crop => {
+                        const option = document.createElement("option");
+                        option.value = crop.name;
+                        option.textContent = `${crop.name} (${crop.id})`;
+                        option.dataset.cropId = crop.id;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    select.appendChild(optgroup);
+                });
+            });
+        }
+
+        // Function to handle crop selection and auto-populate crop ID
+        function handleCropSelection() {
+            const cropSelect = document.getElementById("cropName");
+            const cropIdInput = document.getElementById("cropId");
+            
+            if (cropSelect.value) {
+                const selectedOption = cropSelect.options[cropSelect.selectedIndex];
+                const cropId = selectedOption.dataset.cropId;
+                cropIdInput.value = cropId;
+            } else {
+                cropIdInput.value = "";
+            }
+        }
+
         async function initWeb3() {
             if (typeof window.ethereum !== "undefined") {
                 web3 = new Web3(window.ethereum);
@@ -249,18 +562,105 @@
             }
         }
 
+        function generateBatchNumber() {
+            // Check if MetaMask is connected
+            if (!userAccount) {
+                document.getElementById("generatedBatch").innerText = "Please connect MetaMask first!";
+                document.getElementById("generatedBatch").classList.add("error");
+                document.getElementById("generatedBatch").style.display = "block";
+                return;
+            }
+
+            // Get form values
+            const state = document.getElementById("stateSelect").value;
+            const districtCode = document.getElementById("districtCode").value;
+            const postOfficeNumber = document.getElementById("postOfficeNumber").value;
+
+            // Validate inputs
+            if (!state || !districtCode || !postOfficeNumber) {
+                document.getElementById("generatedBatch").innerText = "Please fill in all location details!";
+                document.getElementById("generatedBatch").classList.add("error");
+                document.getElementById("generatedBatch").style.display = "block";
+                return;
+            }
+
+            try {
+                // Get state code (first two characters)
+                const stateCode = stateCodes[state];
+                if (!stateCode) {
+                    throw new Error("Invalid state selected");
+                }
+
+                // Get current date in DDMMYY format
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = String(now.getFullYear()).slice(-2);
+                const dateString = day + month + year;
+
+                // Get last 4 characters of wallet address
+                const walletSuffix = userAccount.slice(-4).toUpperCase();
+
+                // Construct batch number: [StateCode]-[DistrictCode]-[PostOfficeNumber]-[Date]-[Last4Wallet]
+                const batchNumber = `${stateCode}-${districtCode}-${postOfficeNumber}-${dateString}-${walletSuffix}`;
+
+                // Display generated batch number
+                document.getElementById("generatedBatch").innerHTML = `
+                    <strong>Generated Batch Number:</strong><br>
+                    <span style="font-family: monospace; font-size: 18px; color: #514caf;">${batchNumber}</span>
+                `;
+                document.getElementById("generatedBatch").classList.remove("error");
+                document.getElementById("generatedBatch").classList.add("success");
+                document.getElementById("generatedBatch").style.display = "block";
+
+                // Auto-fill the batch number field
+                document.getElementById("cropBatchNumber").value = batchNumber;
+
+            } catch (error) {
+                document.getElementById("generatedBatch").innerText = "Error generating batch number: " + error.message;
+                document.getElementById("generatedBatch").classList.add("error");
+                document.getElementById("generatedBatch").style.display = "block";
+            }
+        }
+
         async function registerCrop() {
-            const cropId = parseInt(document.getElementById("cropId").value);
+            const cropId = document.getElementById("cropId").value;
             const cropName = document.getElementById("cropName").value;
             const cropManufacturer = document.getElementById("cropManufacturer").value;
             const cropBatchNumber = document.getElementById("cropBatchNumber").value;
+            const cropPrice = document.getElementById("cropPrice").value;
+
+            // Validation
+            if (!cropId || !cropName || !cropManufacturer || !cropBatchNumber || !cropPrice) {
+                document.getElementById("output").innerText = "Please fill in all required fields including price!";
+                document.getElementById("output").classList.add("error");
+                return;
+            }
 
             document.getElementById("output").innerText = "Processing... Please wait.";
 
             try {
-                await contract.methods.registerDrug(cropId, cropName, cropManufacturer, cropBatchNumber)
+                // Convert crop ID to a unique number for smart contract
+                const numericId = parseInt(cropId.replace('C', '')); // Convert C001 to 1, C002 to 2, etc.
+                
+                // Store price in localStorage for marketplace display (since smart contract doesn't have price field)
+                const cropData = {
+                    id: numericId,
+                    name: cropName,
+                    manufacturer: cropManufacturer,
+                    batchNumber: cropBatchNumber,
+                    price: parseFloat(cropPrice),
+                    owner: userAccount,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Store in localStorage with a unique key
+                const storageKey = `crop_${numericId}_${Date.now()}`;
+                localStorage.setItem(storageKey, JSON.stringify(cropData));
+                
+                await contract.methods.registerDrug(numericId, cropName, cropManufacturer, cropBatchNumber)
                     .send({ from: userAccount });
-                document.getElementById("output").innerText = "Crop registered successfully!";
+                document.getElementById("output").innerText = `Crop registered successfully! Crop ID: ${cropId}, Price: ₹${cropPrice}`;
                 document.getElementById("output").classList.add("success");
             } catch (error) {
                 document.getElementById("output").innerText = "Error registering crop: " + error.message;
@@ -298,10 +698,47 @@
             }
         }
 
+        // Function to browse marketplace for a specific crop
+        function browseMarketplace() {
+            const selectedCrop = document.getElementById("marketplaceCropSelect").value;
+
+            if (!selectedCrop) {
+                alert("Please select a crop to browse the marketplace.");
+                return;
+            }
+
+            const selectedOption = document.getElementById("marketplaceCropSelect").options[document.getElementById("marketplaceCropSelect").selectedIndex];
+            const cropId = selectedOption.dataset.cropId;
+
+            // Debug: Log the values being passed
+            console.log("Selected crop:", selectedCrop);
+            console.log("Crop ID:", cropId);
+            console.log("Selected option:", selectedOption);
+
+            // Store crop data in localStorage as backup
+            localStorage.setItem('selectedCropData', JSON.stringify({
+                cropId: cropId,
+                cropName: selectedCrop,
+                timestamp: Date.now()
+            }));
+
+            // Redirect to marketplace page with crop parameters
+            const marketplaceUrl = `marketplace.html?cropId=${encodeURIComponent(cropId)}&cropName=${encodeURIComponent(selectedCrop)}`;
+            console.log("Marketplace URL:", marketplaceUrl);
+            window.open(marketplaceUrl, '_blank');
+        }
+
         // Attach events after DOM is ready
         window.addEventListener("DOMContentLoaded", () => {
+            // Initialize crop dropdown
+            populateCropDropdown();
+            
+            // Attach event listeners
             document.getElementById("connectBtn").addEventListener("click", initWeb3);
+            document.getElementById("cropName").addEventListener("change", handleCropSelection);
+            document.getElementById("generateBatchBtn").addEventListener("click", generateBatchNumber);
             document.getElementById("registerCropBtn").addEventListener("click", registerCrop);
+            document.getElementById("browseMarketplaceBtn").addEventListener("click", browseMarketplace);
             document.getElementById("getCropDetailsBtn").addEventListener("click", getCropDetailsById);
             document.getElementById("transferOwnershipBtn").addEventListener("click", transferOwnership);
         });
