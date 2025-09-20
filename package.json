@@ -4,12 +4,35 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup": "node setup.js",
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:volta": "npx hardhat run scripts/deploy.cjs --network volta",
+    "deploy:sepolia": "npx hardhat run scripts/deploy.cjs --network sepolia",
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "blockchain",
+    "agriculture",
+    "crop-traceability",
+    "web3",
+    "ethereum",
+    "smart-contracts",
+    "marketplace",
+    "supply-chain"
+  ],
+  "author": "Croponchain Team",
+  "license": "MIT",
+  "description": "A decentralized application for tracking and trading agricultural crops on the blockchain",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shansh0324/CropChain-Web3.0.git"
+  },
+  "homepage": "https://github.com/Shansh0324/CropChain-Web3.0#readme",
+  "bugs": {
+    "url": "https://github.com/Shansh0324/CropChain-Web3.0/issues"
+  },
   "dependencies": {
     "dotenv": "^16.0.3",
     "ethers": "^6.12.0"
@@ -17,5 +40,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "hardhat": "^2.26.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
