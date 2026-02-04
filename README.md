@@ -15,7 +15,7 @@ A decentralized application (DApp) for tracking and trading agricultural crops o
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js 
 - MetaMask browser extension
 - Git
 
